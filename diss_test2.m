@@ -6,7 +6,7 @@ fprintf('\n')
 % Earth
 mu = 398600; %km^3 s^-2
 RE = 6371; %km
-g0 = 9.81e-3; %km/s
+%g0 = 9.81e-3; %km/s
 karmin_line = 100; %km
 
 % input
@@ -64,12 +64,14 @@ close_diff = min(total_store);
 
 fprintf('The difference between the inital and final position of the trajectory is %gkm\n\n',abs(close_diff))
 
+tic
 % In order to find the results to the desired accuracy, the ode45 is run
 % again, with the accuracy of the run being refined each time
 fprintf('Please wait while I run some calculations,\nyour buisness is important to us... *♫Hold Music♫*\n\n')
 i = 0;
 i2 = 0;
-while abs(close_diff) > 0.001
+accuracy = 0.001;
+while abs(close_diff) > accuracy
     i = i - 0.001;
     i2 = i;
     options = odeset('abstol',1*10^i,'reltol',1*10^i2);
@@ -82,7 +84,7 @@ while abs(close_diff) > 0.001
     
 total__ = ones(length(x));
 total = sum(total__);
-
+total_store = [0 0];
 for count = 2:total
     x_close = initial_conditions(1)-x(count);
    
@@ -110,34 +112,44 @@ hold on
 [X,Y,Z] = sphere;
 surf(X*RE,Y*RE,Z*RE)
 axis equal
-
+toc
 
 % Rotation of tip relative to surface
 delta_theta = 2*pi*rot_orbit; % Total angle change (rad)
 omega = delta_theta/T; %Angular velocity = delta theta/time period (rad/s)
-
+tic
 sat_COG = [x y];
+
 P1 = zeros(size(x));
 P2 = zeros(size(x));
 i3 = 0;
 sample_size = length(x);
 P_angle = theta_s;
+P_hold = zeros(size(x));
+P_dist_hold = zeros(size(x));
+P1_dist = zeros(size(x));
+P2_dist = zeros(size(x));
 
-while i3 < sample_size
+sat_COG(sample_size+1,1:2) = initial_conditions(1,2); % take_out : forces Final P1P2 to be initial conditons. Would imply a perfect orbit, take out for real orbit
+
+P_differ_angle = omega*(T/sample_size); 
+
+e_hat_rP = [cos(theta_s); sin(theta_s)]; % So that P1(1) and P2(2) are intitial postions
+
+while i3 < sample_size + 1 % take_out + 1 : forces Final P1P2 to be initial conditons. Would imply a perfect orbit, take out for real orbit
     i3 = i3 + 1;
-    P_differ_angle = omega*(T/sample_size); %
-    P_angle = P_angle + P_differ_angle;
-    P_hold(i3) = P_angle;
-    e_hat_rP = [cos(P_angle); sin(P_angle)];
     P1(i3, 1:2) = sat_COG(i3, 1:2) - (alt*e_hat_rP).';
     P2(i3, 1:2) = sat_COG(i3, 1:2) + (alt*e_hat_rP).';
     P_dist_hold(i3) = sqrt((P1(i3,1)-P2(i3,1))^2+(P1(i3,2)-P2(i3,2))^2);
     P1_dist(i3) = sqrt(P1(i3,1)^2+P1(i3,2)^2);
     P2_dist(i3) = sqrt(P2(i3,1)^2+P2(i3,2)^2);
+    P_angle = P_angle + P_differ_angle;
+    P_hold(i3) = P_angle;
+    e_hat_rP = [cos(P_angle); sin(P_angle)];
 end
 P1X = P1(1:end,1); P1Y = P1(1:end,2);
 P2X = P2(1:end,1); P2Y = P2(1:end,2);
-
+toc
 plot(P1X,P1Y)
 plot(P2X,P2Y)
 legend COG Earth P1 P2
@@ -150,7 +162,7 @@ title('P angle')
 figure(3)
 plot(P_dist_hold)
 title('P distance')
-%ylim([999 1001])
+ylim([sat_length-1 sat_length+1])
 
 figure(4)
 plot(P1_dist)
