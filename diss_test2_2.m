@@ -52,38 +52,17 @@ theta = theta_s;
 
 % Initial conditions
 initial_conditions = [r_(1) r_(2) v_(1) v_(2) theta 0 r_P1(1) r_P1(2) r_P2(1) r_P2(2)];
-
 tic
-% In order to find the results to the desired accuracy, the ode45 is run
-% again, with the accuracy of the run being refined each time
 fprintf('Please wait while I run some calculations,\nyour buisness is important to us... *♫Hold Music♫*\n\n')
-i = 0;
 
-accuracy = 0.5;
-close_diff = 1;
-while abs(close_diff) > accuracy
-    i = i - 0.001;   
-    %options = odeset('abstol',1*10^i,'reltol',1*10^i);
-    U = initial_conditions;
+U = initial_conditions;
 
-    [t,U] = ode45(@loving_life, [0 T], U);%, options);
-    x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); time = U(:,6); x_P1 = U(:,7); y_P1 = U(:,8); x_P2 = U(:,9); y_P2 = U(:,10);
-    % 
-total__ = ones(length(x));
-total = sum(total__);
-total_store = [0 0];
-for count = 2:total
-    x_close = initial_conditions(1)-x(count);
-    y_close = initial_conditions(2)-y(count);
-    total_store(count-1) = sqrt(x_close^2  + y_close);
-end
-close_diff = min(total_store);
-end
-
+[~,U] = ode45(@loving_life, [0 T], U);
+x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); time = U(:,6); x_P1 = U(:,7); y_P1 = U(:,8); x_P2 = U(:,9); y_P2 = U(:,10);
+ 
 fprintf('Thank you for waiting \n\n')
 
-fprintf('After adjusting the accuracy of ode45, the difference between the inital and final position of the trajectory is %0.2gkm (%0.4gkm)\n',close_diff,close_diff)
-fprintf('while the values of abstol and reltol are: 1e%g, and 1e%g\n\n',i,i)
+%fprintf('The difference between the inital and final position of the trajectory is %0.2gkm (%0.4gkm)\n',close_diff,close_diff)
 
 figure(1)
 plot(x,y,'color',[61/255 217/255 201/255])
@@ -100,26 +79,30 @@ toc
 plot(x_P1, y_P1)
 
 plot(x_P2, y_P2)
+legend CoG Earth P1 P2
 hold off
 
 P_dist_hold = sqrt((x_P1-x_P2).^2+(y_P1-y_P2).^2);
 P1_dist = sqrt(x_P1.^2+y_P1.^2);
 P2_dist = sqrt(x_P2.^2+y_P2.^2);
 
+
 figure(2)
-plot(P_dist_hold)
+plot(time,P_dist_hold)
 title('P distance')
 
 figure(3)
-plot(P1_dist)
+plot(time,P1_dist)
 title('P1 distance')
 
 figure(4)
-plot(P2_dist)
+plot(time,P2_dist)
 title('P2 distance')
 
-legend CoG Earth P1 P2
-fprintf('end')
+
+fprintf('%g\n',mean(P_dist_hold))
+fprintf('%g\n',mean(P1_dist))
+fprintf('%g\n',mean(P2_dist))
 
 function dU = loving_life(t,U)
     dU = zeros(size(U));
