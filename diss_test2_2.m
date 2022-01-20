@@ -25,7 +25,7 @@ fprintf('Length of tether = %gkm\n\n',sat_length)
 
 sat_radius = sat_length/2; %km
 a = RE + sat_radius + karmin_line; % Distance from centre of the Earth
-theta_s = pi/4; %theta at the start of the run
+theta_s = 0; %theta at the start of the run
 
 % Orbit information
 T = 2 * pi * sqrt(a^3/mu); % Time period
@@ -51,7 +51,7 @@ r_P2 = r_P2_orb*e_hat_r;
 theta = theta_s;
 
 % Initial conditions
-initial_conditions = [r_(1) r_(2) v_(1) v_(2) r_P1(1) r_P1(2) r_P2(1) r_P2(2) ];
+initial_conditions = [r_(1) r_(2) v_(1) v_(2) theta 0 r_P1(1) r_P1(2) r_P2(1) r_P2(2)];
 
 tic
 % In order to find the results to the desired accuracy, the ode45 is run
@@ -62,23 +62,19 @@ i = 0;
 accuracy = 0.5;
 close_diff = 1;
 while abs(close_diff) > accuracy
-    i = i - 0.001;
-    
-    options = odeset('abstol',1*10^i,'reltol',1*10^i);
-
+    i = i - 0.001;   
+    %options = odeset('abstol',1*10^i,'reltol',1*10^i);
     U = initial_conditions;
 
-    [t,U] = ode45(@loving_life, [0 T], U, options);
-    x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); x_P1 = U(:,5); y_P1 = U(:,6); x_P2 = U(:,7); y_P2 = U(:,8); 
-    % theta = U(:,5);
+    [t,U] = ode45(@loving_life, [0 T], U);%, options);
+    x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); time = U(:,6); x_P1 = U(:,7); y_P1 = U(:,8); x_P2 = U(:,9); y_P2 = U(:,10);
+    % 
 total__ = ones(length(x));
 total = sum(total__);
 total_store = [0 0];
 for count = 2:total
     x_close = initial_conditions(1)-x(count);
-   
     y_close = initial_conditions(2)-y(count);
-
     total_store(count-1) = sqrt(x_close^2  + y_close);
 end
 close_diff = min(total_store);
@@ -86,10 +82,8 @@ end
 
 fprintf('Thank you for waiting \n\n')
 
-    fprintf('After adjusting the accuracy of ode45, the difference between the inital and final position of the trajectory is %0.2gkm (%0.4gkm)\n',close_diff,close_diff)
-    fprintf('while the values of abstol and reltol are: 1e%g, and 1e%g\n\n',i,i)
-
-    fprintf('no\n')
+fprintf('After adjusting the accuracy of ode45, the difference between the inital and final position of the trajectory is %0.2gkm (%0.4gkm)\n',close_diff,close_diff)
+fprintf('while the values of abstol and reltol are: 1e%g, and 1e%g\n\n',i,i)
 
 figure(1)
 plot(x,y,'color',[61/255 217/255 201/255])
@@ -97,17 +91,35 @@ plot(x,y,'color',[61/255 217/255 201/255])
 xlabel('X (km)'),ylabel('Y (km)'),zlabel('Z (km)'),title('The trajectory of the spacecraft around Earth with recalculated error')
 grid on
 hold on
-%[X,Y,Z] = sphere;
-%surf(X*RE,Y*RE,Z*RE)
+[X,Y,Z] = sphere;
+surf(X*RE,Y*RE,Z*RE)
 axis equal
+
 toc
 
 plot(x_P1, y_P1)
 
-plot(x_P2,y_P2)
+plot(x_P2, y_P2)
+hold off
 
-legend CoG P1 P2
+P_dist_hold = sqrt((x_P1-x_P2).^2+(y_P1-y_P2).^2);
+P1_dist = sqrt(x_P1.^2+y_P1.^2);
+P2_dist = sqrt(x_P2.^2+y_P2.^2);
 
+figure(2)
+plot(P_dist_hold)
+title('P distance')
+
+figure(3)
+plot(P1_dist)
+title('P1 distance')
+
+figure(4)
+plot(P2_dist)
+title('P2 distance')
+
+legend CoG Earth P1 P2
+fprintf('end')
 
 function dU = loving_life(t,U)
     dU = zeros(size(U));
@@ -115,13 +127,14 @@ function dU = loving_life(t,U)
     y = U(2);
     u_CoG = U(3);
     v_CoG = U(4);
-    %theta = U(5);
-    x_P1 = U(5); 
-    y_P1 = U(6); 
-    x_P2 = U(7); 
-    y_P2 = U(8); 
+    theta = U(5);
+    time = U(6);
+    x_P1 = U(7); 
+    y_P1 = U(8); 
+    x_P2 = U(9); 
+    y_P2 = U(10); 
     
-
+    
     % Equations for delta of each value
     r = sqrt(x^2 + y^2);
     
@@ -129,15 +142,16 @@ function dU = loving_life(t,U)
     dU(2) = v_CoG;
     dU(3) = -(mu*x)/r^3;
     dU(4) = -(mu*y)/r^3;
-    %dU(5) =  omega*t;
-    
+
+    dU(5) = omega*(t-time);
+    dU(6) = t - time;
     theta = omega*t;
     e_hat_rP = [cos(theta); sin(theta)];
 
-    dU(5) = x - (sat_radius*e_hat_rP(1));
-    dU(6) = y - (sat_radius*e_hat_rP(2));
-    dU(7) = x + (sat_radius*e_hat_rP(1));
-    dU(8) = y + (sat_radius*e_hat_rP(2));
+    dU(7) = x - (sat_radius*e_hat_rP(1)) - x_P1;
+    dU(8) = y - (sat_radius*e_hat_rP(2)) - y_P1;
+    dU(9) = x + (sat_radius*e_hat_rP(1)) - x_P2;
+    dU(10) = y + (sat_radius*e_hat_rP(2)) - y_P2;
+    
 end
-
 end
