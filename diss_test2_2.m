@@ -56,8 +56,9 @@ tic
 fprintf('Please wait while I run some calculations,\nyour buisness is important to us... *♫Hold Music♫*\n\n')
 
 U = initial_conditions;
+options = odeset('abstol',0.001,'reltol',0.000001);
 
-[~,U] = ode45(@loving_life, [0 T], U);
+[~,U] = ode45(@loving_life, [0 T], U, options);
 x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); time = U(:,6); x_P1 = U(:,7); y_P1 = U(:,8); x_P2 = U(:,9); y_P2 = U(:,10);
  
 fprintf('Thank you for waiting \n\n')
