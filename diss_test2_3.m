@@ -63,9 +63,9 @@ tic
 fprintf('Please wait while I run some calculations,\nyour buisness is important to us... *♫Hold Music♫*\n\n')
 
 U = initial_conditions;
-options = odeset('abstol',0.0001,'reltol',0.00001);
+%options = odeset('abstol',0.0001,'reltol',0.00001);
 
-[~,U] = ode45(@loving_life, [0 T], U, options);
+[~,U] = ode23(@loving_life, [0 T], U);%, options);
 x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); ...
     time = U(:,6); x_P1 = U(:,7); y_P1 = U(:,8); x_P2 = U(:,9); ...
     y_P2 = U(:,10); u_P1 = U(:,11); v_P1 = U(:,12); u_P2 = U(:,13);...
@@ -101,17 +101,17 @@ P2_dist = sqrt(x_P2.^2+y_P2.^2);
 figure(2)
 plot(time,P_dist_hold)
 title('P distance')
-ylim([min(P_dist_hold)-1 max(P_dist_hold)+1])
+%ylim([min(P_dist_hold)-1 max(P_dist_hold)+1])
 
 figure(3)
 plot(time,P1_dist)
 title('P1 distance')
-ylim([min(P1_dist)-1 max(P1_dist)+1])
+%ylim([min(P1_dist)-1 max(P1_dist)+1])
 
 figure(4)
 plot(time,P2_dist)
 title('P2 distance')
-ylim([min(P2_dist)-1 max(P2_dist)+1])
+%ylim([min(P2_dist)-1 max(P2_dist)+1])
 
 velo_P1 = sqrt(u_P1.^2+v_P1.^2);
 velo_P2 = sqrt(u_P2.^2+v_P2.^2);
@@ -120,17 +120,17 @@ velo_CoG = sqrt(u_CoG.^2+v_CoG.^2);
 figure(5)
 plot(time,velo_P1)
 title('P1 velocity')
-ylim([min(velo_P1)-1 max(velo_P1)+1])
+%ylim([min(velo_P1)-1 max(velo_P1)+1])
 
 figure(6)
 plot(time,velo_P2)
 title('P2 velocity')
-ylim([min(velo_P2)-1 max(velo_P2)+1])
+%ylim([min(velo_P2)-1 max(velo_P2)+1])
 
 figure(7)
 plot(time,velo_CoG)
 title('CoG velocity')
-ylim([min(velo_CoG)-1 max(velo_CoG)+1])
+%ylim([min(velo_CoG)-1 max(velo_CoG)+1])
 
 
 fprintf('%g\n',mean(P_dist_hold))
@@ -175,7 +175,7 @@ function dU = loving_life(t,U)
     r_P1 = sqrt(x_P1^2 + y_P1^2);
     r_P2 = sqrt(x_P2^2 + y_P2^2);
 
-    e_hat_thetaP = [-sin(theta); cos(theta)];
+    %e_hat_thetaP = [-sin(theta); cos(theta)];
 
     dU(11) = dU(7) - u_P1;
     dU(12) = dU(8) - v_P1; 
