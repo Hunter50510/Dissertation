@@ -3,7 +3,7 @@ clc
 
 tic
 fprintf('\nMinimum speed difference achived =\n')
-sat = 1500;
+sat = 3000;
 
 
 rot = 1;
@@ -16,7 +16,7 @@ rot = rot+1;
 
 end
 
-bar(min_store)
+bar(abs(min_store))
 title('Min speed difference at',sat)
 xlabel('Number of rotations')
 ylabel('Minimum speed difference (km/s)')
