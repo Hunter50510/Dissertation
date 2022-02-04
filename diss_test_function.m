@@ -1,4 +1,4 @@
-function [min_delta_v] = diss_test_function(rot,sat_l)
+function [min_delta_v,max_delta_v] = diss_test_function(rot,sat_l)
 fprintf('\n')
 warning('off')
 
@@ -7,7 +7,6 @@ warning('off')
 % Earth
 mu = 398600; %km^3 s^-2
 RE = 6371; %km
-%g0 = 9.81e-3; %km/s
 karmin_line = 100; %km
 
 %Earth's rotation
@@ -16,16 +15,11 @@ omega_Earth = 2*pi/T_Earth;
 velo_Earth = omega_Earth*RE;
 
 % input
-%inputs = {'Number of rotations per orbit: (Recommended 1-3)','Length of tether: (Recommended 100-1800)'};
-%title_input = 'Rotations and Length';
-%dims = [1 40];
-%hint = {'2','1500'};
-%control = inputdlg(inputs,title_input,dims,hint);
-rot_orbit = rot; %str2double(control{1}); %Number of rotations per orbit
-sat_length = sat_l; %str2double(control{2}); %Length of tether
+rot_orbit = rot; %Number of rotations per orbit
+sat_length = sat_l; %Length of tether
 fprintf('Number of rotations = %g\n',rot_orbit)
 fprintf('Length of tether = %gkm\n\n',sat_length)
-%tic
+
 % Sat information
 
 sat_radius = sat_length/2; %km
@@ -56,16 +50,14 @@ r_P2 = r_P2_orb*e_hat_r;
 v_P1_orb = (2*pi*(a-sat_radius))/T;
 v_P2_orb = (2*pi*(a+sat_radius))/T;
 
-v_P1 = v_P1_orb.*e_hat_theta;%((2*pi*(a-sat_radius))/T)*e_hat_theta;
-v_P2 = v_P2_orb.*e_hat_theta;%((2*pi*(a+sat_radius))/T)*e_hat_theta;
+v_P1 = v_P1_orb.*e_hat_theta;
+v_P2 = v_P2_orb.*e_hat_theta;
 
 theta = theta_s;
 
 % Initial conditions
 initial_conditions = [r_(1) r_(2) v_(1) v_(2) theta 0 r_P1(1) r_P1(2)...
     r_P2(1) r_P2(2) v_P1(1) v_P1(2) v_P2(1) v_P2(2)];
-
-%fprintf('Please wait while I run some calculations,\nyour buisness is important to us... *♫Hold Music♫*\n\n')
 
 U = initial_conditions;
 options = odeset('abstol',0.0001,'reltol',0.00001);
@@ -76,10 +68,6 @@ x = U(:,1); y = U(:,2); u_CoG = U(:,3); v_CoG = U(:,4); theta = U(:,5); ...
     y_P2 = U(:,10); u_P1 = U(:,11); v_P1 = U(:,12); u_P2 = U(:,13);...
     v_P2 = U(:,14);
  
-%fprintf('Thank you for waiting \n\n')
-
-%fprintf('The difference between the inital and final position of the trajectory is %0.2gkm (%0.4gkm)\n',close_diff,close_diff)
-
 figure(1)
 plot(x,y,'color',[61/255 217/255 201/255])
 
@@ -96,86 +84,15 @@ plot(x_P2, y_P2)
 legend CoG Earth P1 P2
 hold off
 
-P_dist_hold = sqrt((x_P1-x_P2).^2+(y_P1-y_P2).^2);
-P1_dist = sqrt(x_P1.^2+y_P1.^2);
-P2_dist = sqrt(x_P2.^2+y_P2.^2);
-
-
-%figure(2)
-%plot(time,P_dist_hold)
-%title('P distance')
-%ylim([min(P_dist_hold)-1 max(P_dist_hold)+1])
-
-%figure(3)
-%plot(time,P1_dist)
-%title('P1 distance')
-%ylim([min(P1_dist)-1 max(P1_dist)+1])
-
-%figure(4)
-%plot(time,P2_dist)
-%title('P2 distance')
-%ylim([min(P2_dist)-1 max(P2_dist)+1])
-
 velo_P1 = sqrt(u_P1.^2+v_P1.^2);
-%velo_P2 = sqrt(u_P2.^2+v_P2.^2);
-%velo_CoG = sqrt(u_CoG.^2+v_CoG.^2);
-
-%figure(5)
-%plot(time,velo_P1)
-%title('P1 velocity')
-%ylim([min(velo_P1)-1 max(velo_P1)+1])
-
-%figure(6)
-%plot(time,velo_P2)
-%title('P2 velocity')
-%ylim([min(velo_P2)-1 max(velo_P2)+1])
-
-%figure(7)
-%plot(time,velo_CoG)
-%title('CoG velocity')
-%ylim([min(velo_CoG)-1 max(velo_CoG)+1])
-
 diff_velo_P1_Earth = velo_P1 - velo_Earth;
-
-%figure(8)
-%plot(time, diff_velo_P1_Earth)
-%hold on
-%title('Difference between P1 and Earth''s velocity')
-%xlabel('Time_(_s_)'), ylabel('Velocity (km/s)')
-%grid on
-%plot([T,T], [min(diff_velo_P1_Earth)-0.1, max(diff_velo_P1_Earth)+0.1])
-%plot([2*T,2*T], [min(diff_velo_P1_Earth)-0.1, max(diff_velo_P1_Earth)+0.1])
-%legend({'Speed difference', 'End of first orbit','End of second orbit'}, 'Location','southeast')
-%hold off
 
 data_length = length(diff_velo_P1_Earth);
 removal = data_length/10;
 diff_velo_P1_Earth_removed = diff_velo_P1_Earth(ceil(removal):ceil(data_length-removal));
-%time_removed = time(ceil(removal):ceil(data_length-removal));
-
-%figure(9)
-%plot(time_removed,diff_velo_P1_Earth_removed)
-%hold on
-%title('Difference between P1 and Earth''s velocity')
-%xlabel('Time_(_s_)'), ylabel('Velocity (km/s)')
-%grid on
-%grid on
-%plot([T,T], [min(diff_velo_P1_Earth_removed)-0.1, ...
-%    max(diff_velo_P1_Earth_removed)+0.1])
-%plot([2*T,2*T], [min(diff_velo_P1_Earth_removed)-0.1, ...
-%    max(diff_velo_P1_Earth_removed)+0.1])
-%legend({'Speed difference', 'End of first orbit','End of second orbit'}, ...
-%    'Location','southeast')
-%hold off
 
 min_delta_v = min(diff_velo_P1_Earth_removed);
-%fprintf('The minimum difference between the Earth and P1 = %gkm/s\n\n',min_delta_v)
-
-%toc
-
-%fprintf('%g\n',mean(P_dist_hold))
-%fprintf('%g\n',mean(P1_dist))
-%fprintf('%g\n',mean(P2_dist))
+max_delta_v = max(diff_velo_P1_Earth_removed);
 
     function dU = spinny_boi(t,U)
     dU = zeros(size(U));
@@ -215,11 +132,8 @@ min_delta_v = min(diff_velo_P1_Earth_removed);
     r_P1 = sqrt(x_P1^2 + y_P1^2);
     r_P2 = sqrt(x_P2^2 + y_P2^2);
 
-    %e_hat_thetaP = [-sin(theta); cos(theta)];
-
     dU(11) = dU(7) - u_P1;
     dU(12) = dU(8) - v_P1; 
-    %((2*pi*(y_P1-sat_radius))/T)*e_hat_thetaP(2); %(y - y_P1)*e_hat_thetaP(2);
     dU(13) = dU(9) - u_P2;
     dU(14) = dU(10) - v_P2;
 end
