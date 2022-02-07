@@ -1,14 +1,14 @@
-function diss_test_running_surf
+%function diss_test_running_surf
 tic
 fprintf('Minimum speed difference achived =')
-sat_start = 1000;
+sat_start = 100;
 sat = sat_start;
-sat_max = 4000;
+sat_max = 5000;
 sat_1 = sat;
 sat_step = 100;
 rot_start = 1;
 rot_step = 0.1;
-rot_max = 8;
+rot_max = 10;
 i = 1;
 j = 0;
 min_store = zeros(length(i));
@@ -49,6 +49,16 @@ set(gca,'YTickLabel',rot_start-rot_step:rot_step:rot_max)
 set(gca,'XTick',0:1:j)
 set(gca,'XTickLabel',sat_start-sat_step:sat_step:sat_max)
 
+figure(3)
+surf(max_store)
+title('Maximum speeds at different lengths and rotations')
+ylabel('Number of rotations per orbit')
+zlabel('Minimum speed (km/s)')
+xlabel('Length (km)')
+set(gca,'YTick',0:1:k)
+set(gca,'YTickLabel',rot_start-rot_step:rot_step:rot_max)
+set(gca,'XTick',0:1:j)
+set(gca,'XTickLabel',sat_start-sat_step:sat_step:sat_max)
 
 toc
-end
+%end
